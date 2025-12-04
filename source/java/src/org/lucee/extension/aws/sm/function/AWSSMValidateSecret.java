@@ -85,7 +85,7 @@ public class AWSSMValidateSecret extends BIF implements Function {
 		try {
 
 			String strSecret = SecretReciever.getSecret(pc, secret, SecretReciever.AWSCURRENT, region, accessKeyId,
-					secretKey, endpoint, checkEnviroment);
+					secretKey, endpoint, checkEnviroment, pc.getConfig().getLog("application"));
 
 			Struct data = e.getCastUtil().fromJsonStringToStruct(strSecret);
 			if (key != null) {

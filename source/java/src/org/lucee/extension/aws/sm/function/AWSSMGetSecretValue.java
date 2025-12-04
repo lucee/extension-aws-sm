@@ -72,7 +72,7 @@ public class AWSSMGetSecretValue extends BIF implements Function {
 		}
 
 		String strSecret = SecretReciever.getSecret(pc, secret, SecretReciever.AWSCURRENT, region, accessKeyId,
-				secretKey, endpoint, checkEnviroment);
+				secretKey, endpoint, checkEnviroment, pc.getConfig().getLog("application"));
 		return e.getCastUtil().fromJsonStringToStruct(strSecret);
 	}
 }

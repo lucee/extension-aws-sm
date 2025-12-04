@@ -1,4 +1,4 @@
-package org.lucee.extension.aws.sm;
+package org.lucee.extension.aws.ssm;
 
 import java.net.URI;
 
@@ -13,23 +13,20 @@ import lucee.runtime.exp.PageException;
 import lucee.runtime.type.Struct;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerClientBuilder;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.SsmClientBuilder;
+import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
+import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 
-public class SecretReciever {
+public class ParameterStoreReceiver {
 
-	public static final String AWSPENDING = "AWSPENDING";
-	public static final String AWSCURRENT = "AWSCURRENT";
-	public static final String AWSPREVIOUS = "AWSPREVIOUS";
+	public static String getParameter(PageContext pc, String parameterName, boolean withDecryption, String region,
+			String accessKeyId, String secretKey, String endpoint, boolean checkEnvVarAndSystemProWhenArgNotProvided,
+			Log log) throws PageException {
 
-	public static String getSecret(PageContext pc, String secretName, String staging, String region, String accessKeyId,
-			String secretKey, String endpoint, boolean checkEnvVarAndSystemProWhenArgNotProvided, Log log)
-			throws PageException {
-		SecretsManagerClientBuilder builder = SecretsManagerClient.builder();
+		SsmClientBuilder builder = SsmClient.builder();
 
 		String secretOrigin = Util.isEmpty(accessKeyId, true) ? null : "provided";
 		String endpointOrigin = Util.isEmpty(endpoint, true) ? null : "provided";
@@ -42,18 +39,18 @@ public class SecretReciever {
 			// application.cfc
 			if (pc != null) {
 				Struct data = CommonsUtil.getApplicationData(pc);
-				Struct sm = eng.getCastUtil().toStruct(data.get("sm", null), null);
-				if (sm != null) {
+				Struct ssm = eng.getCastUtil().toStruct(data.get("ssm", null), null);
+				if (ssm != null) {
 
 					// accessKeyId
 					if (Util.isEmpty(accessKeyId, true)) {
-						accessKeyId = eng.getCastUtil().toString(sm.get("accesskeyid", null), null);
+						accessKeyId = eng.getCastUtil().toString(ssm.get("accesskeyid", null), null);
 						if (!Util.isEmpty(accessKeyId, true)) {
 							secretOrigin = "application";
 						}
 					}
 					if (Util.isEmpty(accessKeyId, true)) {
-						accessKeyId = eng.getCastUtil().toString(sm.get("accesskey", null), null);
+						accessKeyId = eng.getCastUtil().toString(ssm.get("accesskey", null), null);
 						if (!Util.isEmpty(accessKeyId, true)) {
 							secretOrigin = "application";
 						}
@@ -61,48 +58,47 @@ public class SecretReciever {
 
 					// secretKey
 					if (Util.isEmpty(secretKey, true))
-						secretKey = eng.getCastUtil().toString(sm.get("secretkey", null), null);
+						secretKey = eng.getCastUtil().toString(ssm.get("secretkey", null), null);
 					if (Util.isEmpty(secretKey, true))
-						secretKey = eng.getCastUtil().toString(sm.get("awssecretkey", null), null);
+						secretKey = eng.getCastUtil().toString(ssm.get("awssecretkey", null), null);
 
 					// region
 					if (Util.isEmpty(region, true))
-						region = eng.getCastUtil().toString(sm.get("region", null), null);
+						region = eng.getCastUtil().toString(ssm.get("region", null), null);
 					if (Util.isEmpty(region, true))
-						region = eng.getCastUtil().toString(sm.get("location", null), null);
+						region = eng.getCastUtil().toString(ssm.get("location", null), null);
 
 					// endpoint
 					if (Util.isEmpty(endpoint, true)) {
-						endpoint = eng.getCastUtil().toString(sm.get("endpoint", null), null);
+						endpoint = eng.getCastUtil().toString(ssm.get("endpoint", null), null);
 						if (!Util.isEmpty(endpoint, true)) {
 							endpointOrigin = "application";
 						}
 					}
 					if (Util.isEmpty(endpoint, true)) {
-						endpoint = eng.getCastUtil().toString(sm.get("host", null), null);
+						endpoint = eng.getCastUtil().toString(ssm.get("host", null), null);
 						if (!Util.isEmpty(endpoint, true)) {
 							endpointOrigin = "application";
 						}
 					}
 					if (Util.isEmpty(endpoint, true)) {
-						endpoint = eng.getCastUtil().toString(sm.get("server", null), null);
+						endpoint = eng.getCastUtil().toString(ssm.get("server", null), null);
 						if (!Util.isEmpty(endpoint, true)) {
 							endpointOrigin = "application";
 						}
 					}
 				}
-
 			}
 
 			// accessKeyId
 			if (Util.isEmpty(accessKeyId, true)) {
-				accessKeyId = CommonsUtil.getSystemPropOrEnvVar("secretmanager.accesskeyid", null);
+				accessKeyId = CommonsUtil.getSystemPropOrEnvVar("parameterstore.accesskeyid", null);
 				if (!Util.isEmpty(accessKeyId, true)) {
 					secretOrigin = "system property/environment variable";
 				}
 			}
 			if (Util.isEmpty(accessKeyId, true)) {
-				accessKeyId = CommonsUtil.getSystemPropOrEnvVar("secretmanager.accesskey", null);
+				accessKeyId = CommonsUtil.getSystemPropOrEnvVar("parameterstore.accesskey", null);
 				if (!Util.isEmpty(accessKeyId, true)) {
 					secretOrigin = "system property/environment variable";
 				}
@@ -110,31 +106,31 @@ public class SecretReciever {
 
 			// secretKey
 			if (Util.isEmpty(secretKey, true))
-				secretKey = CommonsUtil.getSystemPropOrEnvVar("secretmanager.secretkey", null);
+				secretKey = CommonsUtil.getSystemPropOrEnvVar("parameterstore.secretkey", null);
 			if (Util.isEmpty(secretKey, true))
-				secretKey = CommonsUtil.getSystemPropOrEnvVar("secretmanager.awssecretkey", null);
+				secretKey = CommonsUtil.getSystemPropOrEnvVar("parameterstore.awssecretkey", null);
 
 			// region
 			if (Util.isEmpty(region, true))
-				region = CommonsUtil.getSystemPropOrEnvVar("secretmanager.region", null);
+				region = CommonsUtil.getSystemPropOrEnvVar("parameterstore.region", null);
 			if (Util.isEmpty(region, true))
-				region = CommonsUtil.getSystemPropOrEnvVar("secretmanager.location", null);
+				region = CommonsUtil.getSystemPropOrEnvVar("parameterstore.location", null);
 
 			// endpoint
 			if (Util.isEmpty(endpoint, true)) {
-				endpoint = CommonsUtil.getSystemPropOrEnvVar("secretmanager.endpoint", null);
+				endpoint = CommonsUtil.getSystemPropOrEnvVar("parameterstore.endpoint", null);
 				if (!Util.isEmpty(endpoint, true)) {
 					endpointOrigin = "system property/environment variable";
 				}
 			}
 			if (Util.isEmpty(endpoint, true)) {
-				endpoint = CommonsUtil.getSystemPropOrEnvVar("secretmanager.host", null);
+				endpoint = CommonsUtil.getSystemPropOrEnvVar("parameterstore.host", null);
 				if (!Util.isEmpty(endpoint, true)) {
 					endpointOrigin = "system property/environment variable";
 				}
 			}
 			if (Util.isEmpty(endpoint, true)) {
-				endpoint = CommonsUtil.getSystemPropOrEnvVar("secretmanager.server", null);
+				endpoint = CommonsUtil.getSystemPropOrEnvVar("parameterstore.server", null);
 				if (!Util.isEmpty(endpoint, true)) {
 					endpointOrigin = "system property/environment variable";
 				}
@@ -174,21 +170,21 @@ public class SecretReciever {
 			CommonsUtil.info(log, "setting no region explicitly");
 		}
 
-		SecretsManagerClient client = builder.build();
+		SsmClient client = builder.build();
 
-		GetSecretValueRequest getSecretValueRequest = GetSecretValueRequest.builder().secretId(secretName)
-				.versionStage(staging).build();
+		try {
+			GetParameterRequest request = GetParameterRequest.builder().name(parameterName)
+					.withDecryption(withDecryption).build();
 
-		GetSecretValueResponse getSecretValueResponse = client.getSecretValue(getSecretValueRequest);
+			GetParameterResponse response = client.getParameter(request);
 
-		String str = getSecretValueResponse.secretString();
-		if (Util.isEmpty(str, true)) {
-			SdkBytes secretBinary = getSecretValueResponse.secretBinary();
-			if (secretBinary != null) {
-				str = CFMLEngineFactory.getInstance().getCastUtil().toBase64(secretBinary.asByteArray());
-			}
+			return response.parameter().value();
+		} catch (ParameterNotFoundException e) {
+			throw CFMLEngineFactory.getInstance().getExceptionUtil()
+					.createApplicationException("Parameter [" + parameterName + "] not found in AWS Parameter Store");
+		} catch (Exception e) {
+			throw CFMLEngineFactory.getInstance().getExceptionUtil().createApplicationException(
+					"Error retrieving parameter [" + parameterName + "]: " + e.getMessage());
 		}
-
-		return str;
 	}
 }

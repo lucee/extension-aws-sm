@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.lucee</groupId>
     <artifactId>aws-sm-extension</artifactId>
-    <version>1.0.0.0-ALPHA</version>
+    <version>1.0.0.4-ALPHA</version>
     <packaging>pom</packaging>
     <name>AWS Secret Manager Extension</name>
 
@@ -20,7 +20,7 @@
         <filename>aws-sm-extension</filename>
         <luceeCoreVersion>7.0.0.200</luceeCoreVersion>
         <releaseType>server</releaseType>
-        <label>AWS Secret Manager Extension</label>
+        <label>AWS Secrets Manager and Parameter Store Extension</label>
         <camelname>awsSM</camelname>
         <release.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</release.url>
         <snapshot.url>https://oss.sonatype.org/content/repositories/snapshots/</snapshot.url>
@@ -66,8 +66,7 @@
             <timezone>+1</timezone>
         </developer>
     </developers>
-
-    <description>The AWS Secret Manager Extension integrates AWS Secret Manager within Lucee applications with help of the SecretProvider interface.</description>
+    <description>Integrates AWS Secrets Manager and Systems Manager Parameter Store with Lucee through the SecretProvider interface. Manage sensitive credentials, application configuration, and feature flags with secure, centralized storage supporting encryption, caching, and automatic rotation.</description>
     <url>https://github.com/lucee/extension-aws-sm</url>
 
     <profiles>

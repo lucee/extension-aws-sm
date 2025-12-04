@@ -1,5 +1,6 @@
 package org.lucee.extension.aws.sm.util;
 
+import lucee.commons.io.log.Log;
 import lucee.loader.engine.CFMLEngine;
 import lucee.loader.engine.CFMLEngineFactory;
 import lucee.loader.util.Util;
@@ -40,5 +41,11 @@ public class CommonsUtil {
 		} catch (Exception e) {
 			throw eng.getCastUtil().toPageRuntimeException(e);
 		}
+	}
+
+	public static void info(Log log, String msg) {
+		if (log == null)
+			return;
+		log.info("aws-sm", msg);
 	}
 }

@@ -14,8 +14,8 @@ import lucee.runtime.exp.PageException;
 import lucee.runtime.security.SecretProvider;
 import lucee.runtime.type.Struct;
 import lucee.runtime.util.Cast;
-
-public class AWSMProvider implements SecretProvider {
+// AWSMProvider
+public class AWSSecretManagerProvider implements SecretProvider {
 
 	private String region;
 	private String accessKeyId;
@@ -114,19 +114,20 @@ public class AWSMProvider implements SecretProvider {
 
 	private String get(String key) throws PageException {
 		key = key.trim();
-		if (timeout > 0) {
+		if (timeout != 0) {
 			Reference<Val> ref = cache.get(key);
 			if (ref != null) {
 				Val val = ref.get();
-				if (val.created + timeout > System.currentTimeMillis())
+
+				if (timeout < 0 || val.created + timeout > System.currentTimeMillis())
 					return val.value;
 			}
 		}
 
 		String value = SecretReciever.getSecret(null, key, SecretReciever.AWSCURRENT, region, accessKeyId, secretKey,
-				endpoint, checkEnviroment);
+				endpoint, checkEnviroment, getLog());
 		// cache the value for future use
-		if (timeout > 0) {
+		if (timeout != 0) {
 			cache.put(key, new SoftReference<Val>(new Val(value)));
 		}
 		return value;
