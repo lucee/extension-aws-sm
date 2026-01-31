@@ -103,6 +103,8 @@ mvn clean -Dmdep.copyPom=true -Drevision=3.0.0.0-ALPHA -Dmdep.useRepositoryLayou
 Built-Date: ${NOW}
 version: "${bundleversion}"
 id: "${id}"
+groupId: "${groupId}"
+artifactId: "${artifactId}"
 name: "${label}"
 description: "${description}"
 lucee-core-version: "${luceeCoreVersion}"
