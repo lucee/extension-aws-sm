@@ -52,10 +52,12 @@
             <arg value="-Drevision=${bundleversion}"/>
             <arg value="dependency:copy-dependencies"/>
         </exec>
-        <!--
-mvn clean -Dmdep.copyPom=true -Drevision=3.0.0.0-ALPHA -Dmdep.useRepositoryLayout=true -DexcludeScope=provided -DoutputDirectory=/Users/mic/tmp9/xxx  dependency:copy-dependencies
--->
 
+        <!-- Copy parent POMs automatically -->
+        <exec executable="bash" failonerror="true">
+            <arg value="${basedir}/copy-parent-poms.sh"/>
+            <arg value="${temp}/dependency"/>
+        </exec>
 
     </target>
     
