@@ -125,8 +125,8 @@ jobs:
         run: |
           if [[ "${{ needs.setup.outputs.version }}" == *-SNAPSHOT ]]; then
             echo "------- Maven Deploy snapshot on ${{ github.event_name }} -------";
-            mvn -B -e -f pom.xml clean deploy --settings maven-settings.xml
+            mvn -B -e -f pom.xml clean deploy -Dgoal=deploy --settings maven-settings.xml
           else
             echo "------- Maven Deploy release on ${{ github.event_name }} -------";
-            mvn -B -e -f pom.xml clean deploy -DperformRelease=true --settings maven-settings.xml
+            mvn -B -e -f pom.xml clean deploy -Dgoal=deploy -DperformRelease=true --settings maven-settings.xml
           fi
