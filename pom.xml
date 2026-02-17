@@ -145,12 +145,17 @@
                                     <property name="luceeCoreVersion" value="${luceeCoreVersion}"/>
                                     <property name="releaseType" value="${releaseType}"/>
                                     <property name="label" value="${label}"/>
+                                    <property name="class" value="${class}"/>
                                     <property name="description" value="${project.description}"/>
                                     <property name="camelname" value="${camelname}"/>
                                     <property name="mvnGroupId" value="${mvnGroupId}"/>
                                     <property name="mvnGroupPath" value="${mvnGroupPath}"/>
                                     <property name="mvnArtifactId" value="${mvnArtifactId}"/>
                                     <property name="maven.goal" value="${goal}"/> 
+
+                                    <property name="maven.username" value="${env.MAVEN_USERNAME}"/>
+                                    <property name="maven.password" value="${env.MAVEN_PASSWORD}"/>
+                                    <property name="gpg.passphrase" value="${env.GPG_PASSPHRASE}"/>
                                 </ant>
                                 <condition property="isSnapshot" value="true" else="false">
                                     <matches string="${project.version}" pattern=".*-SNAPSHOT"/>
@@ -164,6 +169,11 @@
                                 <echo message="Deploying to URL: ${deploy.url}" />
                             </target>
                             <exportAntProperties>true</exportAntProperties>
+                            <propertySets>
+                                <propertySet>
+                                  <propertyRef prefix="env."/>
+                                </propertySet>
+                              </propertySets>
                         </configuration>
                     </execution>
                 </executions>
