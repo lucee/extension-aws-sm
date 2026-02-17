@@ -61,9 +61,13 @@ jobs:
           distribution: 'adopt'
 
       - name: Build and Install with Maven
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           echo "------- Maven Install -------";
-          mvn -B -e -f pom.xml clean install -Dgoal=install -Dgpg.skip=true
+          mvn -B -e -f pom.xml clean install -Dgoal=install
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
