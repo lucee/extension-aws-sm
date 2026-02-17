@@ -63,7 +63,7 @@ jobs:
       - name: Build and Install with Maven
         run: |
           echo "------- Maven Install -------";
-          mvn -B -e -f pom.xml clean install
+          mvn -B -e -f pom.xml clean install -Dgoal=install
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
