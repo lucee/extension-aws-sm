@@ -62,7 +62,7 @@
     </target>
     
 
-  <target name="copy-dependencies" depends="maven-build">
+<target name="copy-dependencies" depends="maven-build">
     <!-- Create maven directory in extension folder -->
     <mkdir dir="${dist}/extension/maven"/>
     
@@ -75,6 +75,10 @@
             <exclude name="*-javadoc.jar"/>
         </fileset>
     </copy>
+
+    <!-- Copy POM from source location -->
+    <copy file="source/java/pom.xml" tofile="${dist}/extension/maven/${mvnArtifactId}-${bundleversion}.pom"/>
+    
     <!-- Ensure the target directory exists -->
     <mkdir dir="${dist}/extension/maven/org/lucee/${mvnArtifactId}/${bundleversion}/" />
     
