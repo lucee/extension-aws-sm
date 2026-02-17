@@ -14,6 +14,7 @@ import lucee.runtime.exp.PageException;
 import lucee.runtime.security.SecretProvider;
 import lucee.runtime.type.Struct;
 import lucee.runtime.util.Cast;
+
 // AWSMProvider
 public class AWSSecretManagerProvider implements SecretProvider {
 
@@ -138,7 +139,7 @@ public class AWSSecretManagerProvider implements SecretProvider {
 	public String getSecret(String key, String defaultValue) {
 		try {
 			return getSecret(key);
-		} catch (PageException e) {
+		} catch (Exception e) {
 			return defaultValue;
 		}
 	}

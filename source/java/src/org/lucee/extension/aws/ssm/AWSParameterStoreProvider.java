@@ -131,10 +131,10 @@ public class AWSParameterStoreProvider implements SecretProvider {
 
 	private String get(String key) throws PageException {
 		key = key.trim();
-		
+
 		// Apply path prefix
 		String parameterName = pathPrefix + key;
-		
+
 		if (timeout != 0) {
 			Reference<Val> ref = cache.get(parameterName);
 			if (ref != null) {
@@ -145,9 +145,9 @@ public class AWSParameterStoreProvider implements SecretProvider {
 			}
 		}
 
-		String value = ParameterStoreReceiver.getParameter(null, parameterName, withDecryption, region, accessKeyId, 
+		String value = ParameterStoreReceiver.getParameter(null, parameterName, withDecryption, region, accessKeyId,
 				secretKey, endpoint, checkEnviroment, getLog());
-		
+
 		// cache the value for future use
 		if (timeout != 0) {
 			cache.put(parameterName, new SoftReference<Val>(new Val(value)));
@@ -159,7 +159,7 @@ public class AWSParameterStoreProvider implements SecretProvider {
 	public String getSecret(String key, String defaultValue) {
 		try {
 			return getSecret(key);
-		} catch (PageException e) {
+		} catch (Exception e) {
 			return defaultValue;
 		}
 	}
