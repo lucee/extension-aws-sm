@@ -38,11 +38,52 @@
         <mkdir dir="${dist}/"/>
     </target>
 
-    <target name="maven-build">
-        <exec dir="source/java" executable="mvn" failonerror="true">
-            <arg line="clean ${maven.goal} -Drevision=${bundleversion}"/>
+        <target name="maven-build">     
+
+        <condition property="is.deploy" value="true" else="false">
+            <equals arg1="${maven.goal}" arg2="deploy"/>
+        </condition>
+
+        <!-- Check if artifact already exists in Maven Central -->
+        <condition property="artifact.exists">
+            <and>
+                <equals arg1="${is.deploy}" arg2="true"/>
+                <http url="https://repo1.maven.org/maven2/${mvnGroupPath}/${mvnArtifactId}/${bundleversion}/${mvnArtifactId}-${bundleversion}.pom"/>
+            </and>
+        </condition>
+
+        <!-- Set effective goal based on whether artifact exists -->
+        <condition property="effective.goal" value="install" else="${maven.goal}">
+            <equals arg1="${artifact.exists}" arg2="true"/>
+        </condition>
+
+
+        <echo>goal:${maven.goal}</echo>
+        <echo>effective.goal:${effective.goal}</echo>
+        <echo>performRelease:${is.deploy}</echo>
+        <echo>groupId:${mvnGroupId}</echo>
+        <echo>groupPath:${mvnGroupPath}</echo>
+        <echo>artifactId:${mvnArtifactId}</echo>
+        <echo>bundleversion:${bundleversion}</echo>
+
+         <exec dir="source/java" executable="mvn" failonerror="true">
+            <arg value="clean"/>
+            <arg value="${effective.goal}"/>
+            <arg value="-Drevision=${bundleversion}"/>
+            <arg value="-DperformRelease=${is.deploy}"/>
+            <!-- <arg value="-X"/>  Debug output -->
+            <arg value="-e"/>  <!-- Error details -->
+            <arg value="--settings"/>
+            <arg value="maven-settings.xml"/>
+            <!-- Add credentials as system properties -->
+            <arg value="-Dmaven.username=${maven.username}"/>
+            <arg value="-Dmaven.password=${maven.password}"/>
+            <arg value="-Dgpg.passphrase=${gpg.passphrase}"/>
         </exec>
         
+            <echo message="Maven output: ${maven.output}"/>
+            <echo message="Maven error: ${maven.error}"/>
+
         <!-- Now copy dependencies -->
         <exec dir="source/java" executable="mvn" failonerror="true">
             <arg value="-DoutputDirectory=${temp}/dependency"/>
@@ -58,6 +99,7 @@
             <arg value="${basedir}/copy-parent-poms.sh"/>
             <arg value="${temp}/dependency"/>
         </exec>
+
 
     </target>
     
