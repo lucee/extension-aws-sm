@@ -121,8 +121,7 @@ jobs:
 
       - name: Create .CFConfig.json
         run: |
-          mkdir -p ${{ github.workspace }}/lucee-server/context
-          cat > ${{ github.workspace }}/lucee-server/context/.CFConfig.json << 'EOF'
+          cat > ${{ github.workspace }}/.CFConfig.json << 'EOF'
           {
             "secretProvider": {
               "sm": {
@@ -183,14 +182,13 @@ jobs:
         env:
           testLabels: aws-sm
           testAdditional: ${{ github.workspace }}/tests
+          # Lucee config
+          LUCEE_BASE_CONFIG: ${{ github.workspace }}/.CFConfig.json
           # LocalStack environment variables
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
           LOCALSTACK_ENDPOINT: http://localhost:4566
-          # Test environment variables
-          EXAMPLE_ENV_VAR: value from env var
-          TEST_ENV_SECRET: test-env-secret-value
 
   deploy:
     runs-on: ubuntu-latest
