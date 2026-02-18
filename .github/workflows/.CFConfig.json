@@ -1,0 +1,26 @@
+{
+  "secretProvider": {
+    "sm": {
+      "class": "org.lucee.extension.aws.sm.AWSSecretManagerProvider",
+      "custom": {
+        "accessKeyId": "${AWS_ACCESS_KEY_ID}",
+        "secretKey": "${AWS_SECRET_ACCESS_KEY}",
+        "region": "${AWS_DEFAULT_REGION:us-east-1}",
+        "endpoint": "${LOCALSTACK_ENDPOINT:http://localhost:4566}",
+        "jsonTraversal": true,
+        "timeout": 5000
+      }
+    },
+    "ps": {
+      "class": "org.lucee.extension.aws.ssm.AWSParameterStoreProvider",
+      "custom": {
+        "accessKeyId": "${AWS_ACCESS_KEY_ID}",
+        "secretKey": "${AWS_SECRET_ACCESS_KEY}",
+        "region": "${AWS_DEFAULT_REGION:us-east-1}",
+        "endpoint": "${LOCALSTACK_ENDPOINT:http://localhost:4566}",
+        "jsonTraversal": true,
+        "timeout": 5000
+      }
+    }
+  }
+}

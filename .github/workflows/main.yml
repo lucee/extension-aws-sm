@@ -51,6 +51,22 @@ jobs:
     strategy:
       matrix:
         lucee: ${{ fromJSON(vars.LUCEE_TEST_VERSIONS_JAKARTA) }}
+
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: secretsmanager,ssm
+          DEFAULT_REGION: us-east-1
+          EAGER_SERVICE_LOADING: 1
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/_localstack/health"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v4
 
@@ -59,6 +75,81 @@ jobs:
         with:
           java-version: '11'
           distribution: 'adopt'
+
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip -q awscliv2.zip
+          sudo ./aws/install --update
+
+      - name: Seed LocalStack
+        run: |
+          echo "Waiting for LocalStack to be ready..."
+          sleep 5
+
+          echo "Seeding LocalStack..."
+
+          # Create secrets in Secrets Manager
+          aws --endpoint-url=http://localhost:4566 secretsmanager create-secret \
+            --name "mysecret" \
+            --secret-string '{"username":"admin","password":"sm-secret"}' \
+            --region us-east-1
+
+          aws --endpoint-url=http://localhost:4566 secretsmanager create-secret \
+            --name "test-secret" \
+            --secret-string 'test-value' \
+            --region us-east-1
+
+          # Create parameters in SSM Parameter Store
+          aws --endpoint-url=http://localhost:4566 ssm put-parameter \
+            --name "myparameter" \
+            --value '{"username":"admin","password":"ps-secret"}' \
+            --type String \
+            --region us-east-1
+
+          aws --endpoint-url=http://localhost:4566 ssm put-parameter \
+            --name "test-parameter" \
+            --value 'test-value' \
+            --type String \
+            --region us-east-1
+
+          echo "Done seeding."
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
+
+      - name: Create .CFConfig.json
+        run: |
+          mkdir -p ${{ github.workspace }}/lucee-server/context
+          cat > ${{ github.workspace }}/lucee-server/context/.CFConfig.json << 'EOF'
+          {
+            "secretProvider": {
+              "sm": {
+                "class": "org.lucee.extension.aws.sm.AWSSecretManagerProvider",
+                "custom": {
+                  "accessKeyId": "test",
+                  "secretKey": "test",
+                  "region": "us-east-1",
+                  "endpoint": "http://localhost:4566",
+                  "jsonTraversal": true,
+                  "timeout": 5000
+                }
+              },
+              "ps": {
+                "class": "org.lucee.extension.aws.ssm.AWSParameterStoreProvider",
+                "custom": {
+                  "accessKeyId": "test",
+                  "secretKey": "test",
+                  "region": "us-east-1",
+                  "endpoint": "http://localhost:4566",
+                  "jsonTraversal": true,
+                  "timeout": 5000
+                }
+              }
+            }
+          }
+          EOF
 
       - name: Build and Install with Maven
         env:
@@ -92,6 +183,14 @@ jobs:
         env:
           testLabels: aws-sm
           testAdditional: ${{ github.workspace }}/tests
+          # LocalStack environment variables
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
+          LOCALSTACK_ENDPOINT: http://localhost:4566
+          # Test environment variables
+          EXAMPLE_ENV_VAR: value from env var
+          TEST_ENV_SECRET: test-env-secret-value
 
   deploy:
     runs-on: ubuntu-latest
