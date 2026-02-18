@@ -121,6 +121,7 @@ jobs:
 
       - name: Create .CFConfig.json
         run: |
+          # Create config in workspace root
           cat > ${{ github.workspace }}/.CFConfig.json << 'EOF'
           {
             "secretProvider": {
@@ -149,6 +150,12 @@ jobs:
             }
           }
           EOF
+          
+          echo "Created .CFConfig.json"
+          echo "Workspace: ${{ github.workspace }}"
+          echo "Full path: ${{ github.workspace }}/.CFConfig.json"
+          ls -la ${{ github.workspace }}/.CFConfig.json
+          cat ${{ github.workspace }}/.CFConfig.json
 
       - name: Build and Install with Maven
         env:
@@ -182,8 +189,10 @@ jobs:
         env:
           testLabels: aws-sm
           testAdditional: ${{ github.workspace }}/tests
-          # Lucee config
+          # Lucee config - use both env var and system property format
           LUCEE_BASE_CONFIG: ${{ github.workspace }}/.CFConfig.json
+          # Pass as Java system property via ANT_OPTS
+          ANT_OPTS: -Dlucee.base.config=${{ github.workspace }}/.CFConfig.json
           # LocalStack environment variables
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
