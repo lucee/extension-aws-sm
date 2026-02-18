@@ -177,16 +177,6 @@ jobs:
         with:
           repository: lucee/lucee
           path: lucee
-
-      - name: Pre-create Lucee config directory with .CFConfig.json
-        run: |
-          # Create the directory structure that script-runner will use
-          LUCEE_CONFIG_DIR="/home/runner/work/_actions/lucee/script-runner/main/temp/lucee/lucee-server/context"
-          mkdir -p "$LUCEE_CONFIG_DIR"
-          cp ${{ github.workspace }}/.CFConfig.json "$LUCEE_CONFIG_DIR/.CFConfig.json"
-          echo "Pre-created .CFConfig.json at: $LUCEE_CONFIG_DIR/.CFConfig.json"
-          cat "$LUCEE_CONFIG_DIR/.CFConfig.json"
-
       - name: Run Lucee Test Suite
         uses: lucee/script-runner@main
         with:
@@ -202,6 +192,7 @@ jobs:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
+          LUCEE_BASE_CONFIG: ${{ github.workspace }}/.CFConfig.json
           LOCALSTACK_ENDPOINT: http://localhost:4566
 
   deploy:
