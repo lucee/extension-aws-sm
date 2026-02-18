@@ -2,6 +2,7 @@ package org.lucee.extension.aws.sm;
 
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -15,7 +16,6 @@ import lucee.runtime.security.SecretProvider;
 import lucee.runtime.type.Struct;
 import lucee.runtime.util.Cast;
 
-// AWSMProvider
 public class AWSSecretManagerProvider implements SecretProvider {
 
 	private String region;
@@ -132,7 +132,6 @@ public class AWSSecretManagerProvider implements SecretProvider {
 			cache.put(key, new SoftReference<Val>(new Val(value)));
 		}
 		return value;
-
 	}
 
 	@Override
@@ -177,8 +176,9 @@ public class AWSSecretManagerProvider implements SecretProvider {
 
 	@Override
 	public void refresh() throws PageException {
-		// TODO
-
+		if (cache != null) {
+			cache.clear();
+		}
 	}
 
 	@Override
@@ -189,6 +189,41 @@ public class AWSSecretManagerProvider implements SecretProvider {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	// ========== Extended methods (discovered via reflection by SecretProviderUtil)
+	// ==========
+
+	public List<String> listSecretNames() throws PageException {
+		return SecretReciever.listSecretNames(null, region, accessKeyId, secretKey, endpoint, checkEnviroment,
+				getLog());
+	}
+
+	public void setSecret(String key, String value) throws PageException {
+		SecretReciever.setSecret(null, key, value, region, accessKeyId, secretKey, endpoint, checkEnviroment, getLog());
+
+		// Update cache if enabled
+		if (cache != null) {
+			cache.put(key.trim(), new SoftReference<Val>(new Val(value)));
+		}
+	}
+
+	public void setSecret(String key, boolean value) throws PageException {
+		setSecret(key, cast.toString(value));
+	}
+
+	public void setSecret(String key, int value) throws PageException {
+		setSecret(key, cast.toString(value));
+	}
+
+	public void removeSecret(String key) throws PageException {
+		SecretReciever.removeSecret(null, key, region, accessKeyId, secretKey, endpoint, checkEnviroment, false,
+				getLog());
+
+		// Remove from cache if enabled
+		if (cache != null) {
+			cache.remove(key.trim());
+		}
 	}
 
 	private static class Val {

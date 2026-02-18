@@ -4,9 +4,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.lucee</groupId>
     <artifactId>aws-sm-extension</artifactId>
-    <version>1.0.0.6-RC</version>
+    <version>1.1.0.0-BETA</version>
     <packaging>pom</packaging>
-    <name>AWS Secret Manager Extension</name>
+    <name>AWS Secret Provider Extension</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

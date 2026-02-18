@@ -1,6 +1,8 @@
 package org.lucee.extension.aws.ssm;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.lucee.extension.aws.sm.util.CommonsUtil;
 
@@ -16,15 +18,129 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.SsmClientBuilder;
+import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
+import software.amazon.awssdk.services.ssm.model.DescribeParametersRequest;
+import software.amazon.awssdk.services.ssm.model.DescribeParametersResponse;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
+import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import software.amazon.awssdk.services.ssm.model.ParameterStringFilter;
+import software.amazon.awssdk.services.ssm.model.ParameterType;
+import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 
 public class ParameterStoreReceiver {
 
 	public static String getParameter(PageContext pc, String parameterName, boolean withDecryption, String region,
 			String accessKeyId, String secretKey, String endpoint, boolean checkEnvVarAndSystemProWhenArgNotProvided,
 			Log log) throws PageException {
+
+		SsmClient client = buildClient(pc, region, accessKeyId, secretKey, endpoint,
+				checkEnvVarAndSystemProWhenArgNotProvided, log);
+
+		try {
+			GetParameterRequest request = GetParameterRequest.builder().name(parameterName)
+					.withDecryption(withDecryption).build();
+
+			GetParameterResponse response = client.getParameter(request);
+
+			return response.parameter().value();
+		} catch (ParameterNotFoundException e) {
+			throw CFMLEngineFactory.getInstance().getExceptionUtil()
+					.createApplicationException("Parameter [" + parameterName + "] not found in AWS Parameter Store");
+		} catch (Exception e) {
+			throw CFMLEngineFactory.getInstance().getExceptionUtil().createApplicationException(
+					"Error retrieving parameter [" + parameterName + "]: " + e.getMessage());
+		}
+	}
+
+	public static void setParameter(PageContext pc, String parameterName, String value, boolean withEncryption,
+			String region, String accessKeyId, String secretKey, String endpoint,
+			boolean checkEnvVarAndSystemProWhenArgNotProvided, Log log) throws PageException {
+
+		SsmClient client = buildClient(pc, region, accessKeyId, secretKey, endpoint,
+				checkEnvVarAndSystemProWhenArgNotProvided, log);
+
+		try {
+			PutParameterRequest.Builder requestBuilder = PutParameterRequest.builder().name(parameterName).value(value)
+					.overwrite(true);
+
+			if (withEncryption) {
+				requestBuilder.type(ParameterType.SECURE_STRING);
+			} else {
+				requestBuilder.type(ParameterType.STRING);
+			}
+
+			client.putParameter(requestBuilder.build());
+			CommonsUtil.info(log, "set parameter [" + parameterName + "]");
+		} catch (Exception e) {
+			throw CFMLEngineFactory.getInstance().getExceptionUtil()
+					.createApplicationException("Error setting parameter [" + parameterName + "]: " + e.getMessage());
+		}
+	}
+
+	public static void removeParameter(PageContext pc, String parameterName, String region, String accessKeyId,
+			String secretKey, String endpoint, boolean checkEnvVarAndSystemProWhenArgNotProvided, Log log)
+			throws PageException {
+
+		SsmClient client = buildClient(pc, region, accessKeyId, secretKey, endpoint,
+				checkEnvVarAndSystemProWhenArgNotProvided, log);
+
+		try {
+			DeleteParameterRequest request = DeleteParameterRequest.builder().name(parameterName).build();
+
+			client.deleteParameter(request);
+			CommonsUtil.info(log, "deleted parameter [" + parameterName + "]");
+		} catch (ParameterNotFoundException e) {
+			throw CFMLEngineFactory.getInstance().getExceptionUtil()
+					.createApplicationException("Parameter [" + parameterName + "] not found in AWS Parameter Store");
+		} catch (Exception e) {
+			throw CFMLEngineFactory.getInstance().getExceptionUtil()
+					.createApplicationException("Error deleting parameter [" + parameterName + "]: " + e.getMessage());
+		}
+	}
+
+	public static List<String> listParameterNames(PageContext pc, String pathPrefix, String region, String accessKeyId,
+			String secretKey, String endpoint, boolean checkEnvVarAndSystemProWhenArgNotProvided, Log log)
+			throws PageException {
+
+		SsmClient client = buildClient(pc, region, accessKeyId, secretKey, endpoint,
+				checkEnvVarAndSystemProWhenArgNotProvided, log);
+
+		List<String> names = new ArrayList<>();
+		String nextToken = null;
+
+		try {
+			do {
+				DescribeParametersRequest.Builder requestBuilder = DescribeParametersRequest.builder();
+
+				if (!Util.isEmpty(pathPrefix, true)) {
+					requestBuilder.parameterFilters(ParameterStringFilter.builder().key("Name").option("BeginsWith")
+							.values(pathPrefix).build());
+				}
+
+				if (nextToken != null) {
+					requestBuilder.nextToken(nextToken);
+				}
+
+				DescribeParametersResponse response = client.describeParameters(requestBuilder.build());
+
+				for (ParameterMetadata param : response.parameters()) {
+					names.add(param.name());
+				}
+
+				nextToken = response.nextToken();
+			} while (nextToken != null);
+
+			return names;
+		} catch (Exception e) {
+			throw CFMLEngineFactory.getInstance().getExceptionUtil()
+					.createApplicationException("Error listing parameters: " + e.getMessage());
+		}
+	}
+
+	private static SsmClient buildClient(PageContext pc, String region, String accessKeyId, String secretKey,
+			String endpoint, boolean checkEnvVarAndSystemProWhenArgNotProvided, Log log) throws PageException {
 
 		SsmClientBuilder builder = SsmClient.builder();
 
@@ -170,21 +286,6 @@ public class ParameterStoreReceiver {
 			CommonsUtil.info(log, "setting no region explicitly");
 		}
 
-		SsmClient client = builder.build();
-
-		try {
-			GetParameterRequest request = GetParameterRequest.builder().name(parameterName)
-					.withDecryption(withDecryption).build();
-
-			GetParameterResponse response = client.getParameter(request);
-
-			return response.parameter().value();
-		} catch (ParameterNotFoundException e) {
-			throw CFMLEngineFactory.getInstance().getExceptionUtil()
-					.createApplicationException("Parameter [" + parameterName + "] not found in AWS Parameter Store");
-		} catch (Exception e) {
-			throw CFMLEngineFactory.getInstance().getExceptionUtil().createApplicationException(
-					"Error retrieving parameter [" + parameterName + "]: " + e.getMessage());
-		}
+		return builder.build();
 	}
 }

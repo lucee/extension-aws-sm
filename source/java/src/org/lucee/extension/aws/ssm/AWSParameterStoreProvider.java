@@ -2,6 +2,8 @@ package org.lucee.extension.aws.ssm;
 
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -210,6 +212,71 @@ public class AWSParameterStoreProvider implements SecretProvider {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	// ========== Extended methods (discovered via reflection by SecretProviderUtil)
+	// ==========
+
+	public void setSecret(String key, String value) throws PageException {
+		if (Util.isEmpty(key, true)) {
+			throw e.getExceptionUtil()
+					.createApplicationException("the given key is empty, you need to provide a valid key");
+		}
+
+		String parameterName = pathPrefix + key.trim();
+
+		ParameterStoreReceiver.setParameter(null, parameterName, value, withDecryption, region, accessKeyId, secretKey,
+				endpoint, checkEnviroment, getLog());
+
+		// Update cache if enabled
+		if (cache != null) {
+			cache.put(parameterName, new SoftReference<Val>(new Val(value)));
+		}
+	}
+
+	public void setSecret(String key, boolean value) throws PageException {
+		setSecret(key, String.valueOf(value));
+	}
+
+	public void setSecret(String key, int value) throws PageException {
+		setSecret(key, String.valueOf(value));
+	}
+
+	public void removeSecret(String key) throws PageException {
+		if (Util.isEmpty(key, true)) {
+			throw e.getExceptionUtil()
+					.createApplicationException("the given key is empty, you need to provide a valid key");
+		}
+
+		String parameterName = pathPrefix + key.trim();
+
+		ParameterStoreReceiver.removeParameter(null, parameterName, region, accessKeyId, secretKey, endpoint,
+				checkEnviroment, getLog());
+
+		// Remove from cache if enabled
+		if (cache != null) {
+			cache.remove(parameterName);
+		}
+	}
+
+	public List<String> listSecretNames() throws PageException {
+		List<String> names = ParameterStoreReceiver.listParameterNames(null, pathPrefix, region, accessKeyId, secretKey,
+				endpoint, checkEnviroment, getLog());
+
+		// Strip pathPrefix from returned names if present
+		if (!Util.isEmpty(pathPrefix, true)) {
+			List<String> strippedNames = new ArrayList<>();
+			for (String n : names) {
+				if (n.startsWith(pathPrefix)) {
+					strippedNames.add(n.substring(pathPrefix.length()));
+				} else {
+					strippedNames.add(n);
+				}
+			}
+			return strippedNames;
+		}
+
+		return names;
 	}
 
 	private static class Val {
