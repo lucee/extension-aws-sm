@@ -198,8 +198,6 @@ jobs:
         env:
           testLabels: aws-sm
           testAdditional: ${{ github.workspace }}/tests
-          # Pass system property to JVM - JAVA_TOOL_OPTIONS is picked up by all JVMs
-          JAVA_TOOL_OPTIONS: -Dlucee.base.config=${{ github.workspace }}/.CFConfig.json
           # LocalStack environment variables
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
