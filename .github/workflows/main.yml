@@ -127,6 +127,7 @@ jobs:
             "secretProvider": {
               "sm": {
                 "class": "org.lucee.extension.aws.sm.AWSSecretManagerProvider",
+                "maven": "org.lucee:aws-sm:1.1.0.0-BETA",
                 "custom": {
                   "accessKeyId": "test",
                   "secretKey": "test",
@@ -138,6 +139,7 @@ jobs:
               },
               "ps": {
                 "class": "org.lucee.extension.aws.ssm.AWSParameterStoreProvider",
+                "maven": "org.lucee:aws-sm:1.1.0.0-BETA",
                 "custom": {
                   "accessKeyId": "test",
                   "secretKey": "test",
