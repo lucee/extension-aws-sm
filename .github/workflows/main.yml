@@ -151,7 +151,7 @@ jobs:
           }
           EOF
           
-          echo "Created .CFConfig.json"
+          echo "Created .CFConfig.json file"
           echo "Workspace: ${{ github.workspace }}"
           echo "Full path: ${{ github.workspace }}/.CFConfig.json"
           ls -la ${{ github.workspace }}/.CFConfig.json
