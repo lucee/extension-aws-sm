@@ -180,10 +180,28 @@ jobs:
 
       - name: Copy .CFConfig.json to Lucee server context
         run: |
-          mkdir -p ${{ github.workspace }}/lucee-server/context
-          cp ${{ github.workspace }}/.CFConfig.json ${{ github.workspace }}/lucee-server/context/.CFConfig.json
-          echo "Copied .CFConfig.json to lucee-server/context/"
-          ls -la ${{ github.workspace }}/lucee-server/context/
+          # The script-runner creates Lucee context here
+          LUCEE_CONFIG_DIR="/home/runner/work/_actions/lucee/script-runner/main/temp/lucee/lucee-server/context"
+          
+          mkdir -p "$LUCEE_CONFIG_DIR"
+          
+          # If .CFConfig.json already exists, we need to merge our secretProvider into it
+          if [ -f "$LUCEE_CONFIG_DIR/.CFConfig.json" ]; then
+            echo "Existing .CFConfig.json found, merging secretProvider..."
+            # Use jq to merge if available, otherwise just copy
+            if command -v jq &> /dev/null; then
+              jq -s '.[0] * .[1]' "$LUCEE_CONFIG_DIR/.CFConfig.json" "${{ github.workspace }}/.CFConfig.json" > "$LUCEE_CONFIG_DIR/.CFConfig.json.tmp"
+              mv "$LUCEE_CONFIG_DIR/.CFConfig.json.tmp" "$LUCEE_CONFIG_DIR/.CFConfig.json"
+            else
+              # Fallback: just copy (overwrites existing)
+              cp ${{ github.workspace }}/.CFConfig.json "$LUCEE_CONFIG_DIR/.CFConfig.json"
+            fi
+          else
+            cp ${{ github.workspace }}/.CFConfig.json "$LUCEE_CONFIG_DIR/.CFConfig.json"
+          fi
+          
+          echo "Config file at: $LUCEE_CONFIG_DIR/.CFConfig.json"
+          cat "$LUCEE_CONFIG_DIR/.CFConfig.json"
 
       - name: Run Lucee Test Suite
         uses: lucee/script-runner@main
@@ -196,10 +214,8 @@ jobs:
         env:
           testLabels: aws-sm
           testAdditional: ${{ github.workspace }}/tests
-          # Lucee config - use both env var and system property format
-          LUCEE_BASE_CONFIG: ${{ github.workspace }}/.CFConfig.json
-          # Pass as Java system property via ANT_OPTS
-          ANT_OPTS: -Dlucee.base.config=${{ github.workspace }}/.CFConfig.json
+          # Pass system property to JVM - JAVA_TOOL_OPTIONS is picked up by all JVMs
+          JAVA_TOOL_OPTIONS: -Dlucee.base.config=${{ github.workspace }}/.CFConfig.json
           # LocalStack environment variables
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
