@@ -2,13 +2,12 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="aws-sm" {
 
 	function beforeAll() {
 
-		var configDir=getPageContext().getConfig().getConfigServerDir();
-		var configFile=configDir&"/.CFConfig.json";
-		systemOutput("--- #configFile# ---",1,1);
-		systemOutput(fileRead(configFile),1,1);
-		systemOutput("lucee.base.config system prop: " & (createObject("java", "java.lang.System").getProperty("lucee.base.config") ?: "NOT SET"), true);
-        systemOutput("lucee.base.config system prop: " & (server.system.properties["lucee.base.config"]?:"NOT SET"), 1,1);
-        systemOutput("LUCEE_BASE_CONFIG env var: " & (server.system.environment["LUCEE_BASE_CONFIG"]?:"NOT SET"), 1,1);
+		var providers=getPageContext().getConfig().getSecretProviders();
+		systemOutput("--- Providers ---",1,1);
+		loop collection=providers.keySet() index="local.i" item="local.providerName" {
+			systemOutput("- #providerName#",1,1);
+		}
+
 
 		variables.testParameterName = "myparameter";
 		variables.testParameterSimple = "test-parameter";

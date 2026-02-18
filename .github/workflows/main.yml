@@ -29,7 +29,7 @@ jobs:
         id: extract-version
         run: |
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "::set-output name=VERSION::$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Cache Lucee files
         uses: actions/cache@v4
@@ -121,13 +121,17 @@ jobs:
 
       - name: Create .CFConfig.json
         run: |
+          # Get version from Maven
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "Using extension version: $VERSION"
+          
           # Create config in workspace root
-          cat > ${{ github.workspace }}/.CFConfig.json << 'EOF'
+          cat > ${{ github.workspace }}/.CFConfig.json << EOF
           {
             "secretProvider": {
               "sm": {
                 "class": "org.lucee.extension.aws.sm.AWSSecretManagerProvider",
-                "maven": "org.lucee:aws-sm:1.1.0.0-BETA",
+                "maven": "org.lucee:aws-sm:$VERSION",
                 "custom": {
                   "accessKeyId": "test",
                   "secretKey": "test",
@@ -139,7 +143,7 @@ jobs:
               },
               "ps": {
                 "class": "org.lucee.extension.aws.ssm.AWSParameterStoreProvider",
-                "maven": "org.lucee:aws-sm:1.1.0.0-BETA",
+                "maven": "org.lucee:aws-sm:$VERSION",
                 "custom": {
                   "accessKeyId": "test",
                   "secretKey": "test",
@@ -154,9 +158,6 @@ jobs:
           EOF
           
           echo "Created .CFConfig.json"
-          echo "Workspace: ${{ github.workspace }}"
-          echo "Full path: ${{ github.workspace }}/.CFConfig.json"
-          ls -la ${{ github.workspace }}/.CFConfig.json
           cat ${{ github.workspace }}/.CFConfig.json
 
       - name: Build and Install with Maven
@@ -179,6 +180,7 @@ jobs:
         with:
           repository: lucee/lucee
           path: lucee
+
       - name: Run Lucee Test Suite
         uses: lucee/script-runner@main
         with:
@@ -190,11 +192,11 @@ jobs:
         env:
           testLabels: aws-sm
           testAdditional: ${{ github.workspace }}/tests
+          LUCEE_BASE_CONFIG: ${{ github.workspace }}/.CFConfig.json
           # LocalStack environment variables
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
-          LUCEE_BASE_CONFIG: ${{ github.workspace }}/.CFConfig.json
           LOCALSTACK_ENDPOINT: http://localhost:4566
 
   deploy:
