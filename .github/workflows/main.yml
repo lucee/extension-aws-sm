@@ -151,7 +151,7 @@ jobs:
           }
           EOF
           
-          echo "Created .CFConfig.json file"
+          echo "Created .CFConfig.json"
           echo "Workspace: ${{ github.workspace }}"
           echo "Full path: ${{ github.workspace }}/.CFConfig.json"
           ls -la ${{ github.workspace }}/.CFConfig.json
@@ -177,6 +177,13 @@ jobs:
         with:
           repository: lucee/lucee
           path: lucee
+
+      - name: Copy .CFConfig.json to Lucee server context
+        run: |
+          mkdir -p ${{ github.workspace }}/lucee-server/context
+          cp ${{ github.workspace }}/.CFConfig.json ${{ github.workspace }}/lucee-server/context/.CFConfig.json
+          echo "Copied .CFConfig.json to lucee-server/context/"
+          ls -la ${{ github.workspace }}/lucee-server/context/
 
       - name: Run Lucee Test Suite
         uses: lucee/script-runner@main
