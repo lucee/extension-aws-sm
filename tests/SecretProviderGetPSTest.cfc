@@ -1,6 +1,13 @@
 component extends="org.lucee.cfml.test.LuceeTestCase" labels="aws-sm" {
 
 	function beforeAll() {
+
+		var configDir=getPageContext().getConfig().getConfigServerDir();
+		var configFile=configDir&"/.CFConfig.json";
+		systemOutput("--- #configFile# ---",1,1);
+		systemOutput(fileRead(configFile),1,1);
+
+
 		variables.testParameterName = "myparameter";
 		variables.testParameterSimple = "test-parameter";
 	}
