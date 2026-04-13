@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.lucee</groupId>
     <artifactId>aws-sm-extension</artifactId>
-    <version>1.1.0.0-BETA</version>
+    <version>1.1.0.1-BETA</version>
     <packaging>pom</packaging>
     <name>AWS Secret Provider Extension</name>
 
@@ -197,6 +197,11 @@
                                     <file>${project.build.directory}/${project.artifactId}-${project.version}.lex</file>
                                     <type>lex</type>
                                 </artifact>
+                                <artifact>
+                                    <file>${project.build.directory}/${project.artifactId}-${project.version}.lite.lex</file>
+                                    <type>lex</type>
+                                    <classifier>lite</classifier>
+                                </artifact>
                             </artifacts>
                         </configuration>
                     </execution>
@@ -248,10 +253,11 @@
                             <goal>deploy-file</goal>
                         </goals>
                         <configuration>
-                            <file>${project.build.directory}/${project.artifactId}-${project.version}.lex</file>
+                            <file>${project.build.directory}/${project.artifactId}-${project.version}.lite.lex</file>
                             <groupId>${project.groupId}</groupId>
                             <artifactId>${project.artifactId}</artifactId>
                             <version>${project.version}</version>
+                            <classifier>lite</classifier>
                             <repositoryId>ossrh</repositoryId>
                             <url>${deploy.url}</url>
                             <packaging>lex</packaging>
