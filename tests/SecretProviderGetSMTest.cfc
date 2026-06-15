@@ -49,7 +49,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="aws-sm" {
 
 			it("throws exception for non-existent secret", function() {
 				expect(function() {
-					SecretProviderGet(key: "non-existent-secret-12345", name: "sm");
+					SecretProviderGet(key: "non-existent-secret-12345", name: "sm", resolve: true);
 				}).toThrow();
 			});
 

@@ -14,7 +14,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="aws-sm" {
 				// Verify it's gone (may need to wait due to AWS eventual consistency)
 				sleep(500);
 				expect(function() {
-					SecretProviderGet("test-remove-sm", "sm");
+					SecretProviderGet("test-remove-sm", "sm", true);
 				}).toThrow();
 			});
 

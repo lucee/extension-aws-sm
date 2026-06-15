@@ -1,14 +1,6 @@
 component extends="org.lucee.cfml.test.LuceeTestCase" labels="aws-sm" {
 
 	function beforeAll() {
-
-		var providers=getPageContext().getConfig().getSecretProviders();
-		systemOutput("--- Providers ---",1,1);
-		loop collection=providers.keySet() index="local.i" item="local.providerName" {
-			systemOutput("- #providerName#",1,1);
-		}
-
-
 		variables.testParameterName = "myparameter";
 		variables.testParameterSimple = "test-parameter";
 	}
@@ -57,7 +49,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="aws-sm" {
 
 			it("throws exception for non-existent parameter", function() {
 				expect(function() {
-					SecretProviderGet(key: "non-existent-parameter-12345", name: "ps");
+					SecretProviderGet(key: "non-existent-parameter-12345", name: "ps", resolve: true);
 				}).toThrow();
 			});
 

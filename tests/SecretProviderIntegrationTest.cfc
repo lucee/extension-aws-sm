@@ -24,7 +24,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="aws-sm" {
 					SecretProviderRemove(key, "sm");
 					sleep(500);
 					expect(function() {
-						SecretProviderGet(key, "sm");
+						SecretProviderGet(key, "sm", true);
 					}).toThrow();
 				});
 
@@ -50,7 +50,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="aws-sm" {
 					// Delete
 					SecretProviderRemove(key, "ps");
 					expect(function() {
-						SecretProviderGet(key, "ps");
+						SecretProviderGet(key, "ps", true);
 					}).toThrow();
 				});
 

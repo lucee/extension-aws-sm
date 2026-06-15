@@ -21,9 +21,9 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="aws-sm" {
 			it("resolves immediately when resolve is true", function() {
 				var result = SecretProviderList("sm", true);
 				expect(result).toBeStruct();
-				if (structKeyExists(result, "test-secret")) {
-					expect(result["test-secret"]).toBe("test-value");
-				}
+				expect(structKeyExists(result, "mysecret")).toBeTrue();
+				expect(result["mysecret"]).toBeString();
+				expect(len(result["mysecret"])).toBeGT(0);
 			});
 
 		});

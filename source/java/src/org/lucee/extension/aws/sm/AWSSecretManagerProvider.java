@@ -217,7 +217,7 @@ public class AWSSecretManagerProvider implements SecretProvider {
 	}
 
 	public void removeSecret(String key) throws PageException {
-		SecretReciever.removeSecret(null, key, region, accessKeyId, secretKey, endpoint, checkEnviroment, false,
+		SecretReciever.removeSecret(null, key, region, accessKeyId, secretKey, endpoint, checkEnviroment, true,
 				getLog());
 
 		// Remove from cache if enabled

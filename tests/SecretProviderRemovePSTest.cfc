@@ -13,7 +13,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="aws-sm" {
 
 				// Verify it's gone
 				expect(function() {
-					SecretProviderGet("test-remove-ps", "ps");
+					SecretProviderGet("test-remove-ps", "ps", true);
 				}).toThrow();
 			});
 
