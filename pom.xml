@@ -4,15 +4,18 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.lucee</groupId>
     <artifactId>aws-sm-extension</artifactId>
-    <version>1.1.0.2-RC</version>
+    <version>1.1.0.3-RC</version>
     <packaging>pom</packaging>
     <name>AWS Secret Provider Extension</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <id>16953C9D-0A26-4283-904AD851B30506AF</id>
+        <image>https://raw.githubusercontent.com/lucee/extension-aws-sm/master/source/images/logo.png</image>
+        <buildDate>${maven.build.timestamp}</buildDate>
         <bundlename>aws.sm.extension</bundlename>
         <mvnGroupId>org.lucee</mvnGroupId>
         <mvnGroupPath>org/lucee</mvnGroupPath>
@@ -123,6 +126,30 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <flattenMode>bom</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Antrun plugin to execute the Ant build -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
