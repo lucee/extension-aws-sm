@@ -21,6 +21,7 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClientBuilder;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
+import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.secretsmanager.model.ListSecretsRequest;
@@ -44,7 +45,13 @@ public class SecretReciever {
 		GetSecretValueRequest getSecretValueRequest = GetSecretValueRequest.builder().secretId(secretName)
 				.versionStage(staging).build();
 
-		GetSecretValueResponse getSecretValueResponse = client.getSecretValue(getSecretValueRequest);
+		GetSecretValueResponse getSecretValueResponse;
+		try {
+			getSecretValueResponse = client.getSecretValue(getSecretValueRequest);
+		} catch (ResourceNotFoundException e) {
+			throw CFMLEngineFactory.getInstance().getExceptionUtil()
+					.createApplicationException("Secret [" + secretName + "] not found in AWS Secrets Manager");
+		}
 
 		String str = getSecretValueResponse.secretString();
 		if (Util.isEmpty(str, true)) {
@@ -111,6 +118,13 @@ public class SecretReciever {
 			Log log) throws PageException {
 		SecretsManagerClient client = buildClient(pc, region, accessKeyId, secretKey, endpoint,
 				checkEnvVarAndSystemProWhenArgNotProvided, log);
+
+		try {
+			client.describeSecret(DescribeSecretRequest.builder().secretId(secretName).build());
+		} catch (ResourceNotFoundException e) {
+			throw CFMLEngineFactory.getInstance().getExceptionUtil()
+					.createApplicationException("Secret [" + secretName + "] not found in AWS Secrets Manager");
+		}
 
 		DeleteSecretRequest.Builder requestBuilder = DeleteSecretRequest.builder().secretId(secretName);
 
