@@ -190,10 +190,10 @@ jobs:
           luceeVersion: ${{ matrix.lucee.version }}
           luceeVersionQuery: ${{ matrix.lucee.query }}
           extensionDir: ${{ github.workspace }}/target
+          luceeCFConfig: ${{ github.workspace }}/.CFConfig.json
         env:
           testLabels: aws-sm
           testAdditional: ${{ github.workspace }}/tests
-          LUCEE_BASE_CONFIG: ${{ github.workspace }}/.CFConfig.json
           # LocalStack environment variables
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
