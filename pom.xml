@@ -20,7 +20,6 @@
         <mvnGroupId>org.lucee</mvnGroupId>
         <mvnGroupPath>org/lucee</mvnGroupPath>
         <mvnArtifactId>aws-sm</mvnArtifactId>
-        <mvnVersion>1.0.0.0-ALPHA</mvnVersion>
         <filename>aws-sm-extension</filename>
         <luceeCoreVersion>7.0.0.200</luceeCoreVersion>
         <releaseType>server</releaseType>
@@ -36,17 +35,6 @@
         <developerConnection>scm:git:git@github.com:lucee/extension-aws-sm.git</developerConnection>
         <tag>${project.version}</tag>
     </scm>
-
-    <distributionManagement>
-        <repository>
-            <id>ossrh</id>
-            <url>${release.url}</url>
-        </repository>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>${snapshot.url}</url>
-        </snapshotRepository>
-    </distributionManagement>
 
     <licenses>
         <license>
@@ -132,6 +120,8 @@
                 <version>1.6.0</version>
                 <configuration>
                     <flattenMode>bom</flattenMode>
+                    <!-- flattened POM, used by the S3 upload (packaging pom is skipped by default) -->
+                    <updatePomFile>true</updatePomFile>
                 </configuration>
                 <executions>
                     <execution>
@@ -275,7 +265,7 @@
                 <version>3.0.0-M1</version>
                 <executions>
                     <execution>
-                        <id>default-deploy</id>
+                        <id>deploy-lite</id>
                         <phase>deploy</phase>
                         <goals>
                             <goal>deploy-file</goal>
